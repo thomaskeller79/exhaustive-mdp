@@ -27,6 +27,7 @@ set(SEARCH_SOURCES
     backup_function
     depth_first_search
     evaluatables
+    exhaustive_mdp
     initializer
     ipc_client
     iterative_deepening_search

@@ -9,6 +9,7 @@ public:
 
     static bool readFile(std::string& file, std::string& res,
                          std::string ignoreSign = "");
+    static bool writeFile(std::string const& file, std::string const& text);
 
     static long getTotalVirtualMemory();
     static long getUsedVirtualMemory();

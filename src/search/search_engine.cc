@@ -3,6 +3,7 @@
 #include "prost_planner.h"
 
 #include "depth_first_search.h"
+#include "exhaustive_mdp.h"
 #include "iterative_deepening_search.h"
 #include "minimal_lookahead_search.h"
 #include "random_walk.h"
@@ -170,6 +171,9 @@ SearchEngine* SearchEngine::fromString(string& desc) {
     } else if (isConfig("RandomWalk")) {
         desc = desc.substr(10, desc.size());
         result = new RandomWalk();
+    } else if(isConfig("ExhaustiveMDP")) {
+        desc = desc.substr(13, desc.size());
+        result = new ExhaustiveMDPGenerator();
     } else {
         SystemUtils::abort("Unknown Search Engine: " + desc);
     }

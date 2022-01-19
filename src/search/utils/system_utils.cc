@@ -53,6 +53,16 @@ bool SystemUtils::readFile(std::string& file, std::string& res,
     return true;
 }
 
+bool SystemUtils::writeFile(std::string const& file, std::string const& text) {
+    std::ofstream ofs(file.c_str());
+    if (!ofs) {
+        return false;
+    }
+    ofs << text;
+    ofs.close();
+    return true;
+}
+
 // returns the available total virtual memory
 long SystemUtils::getTotalVirtualMemory() {
     struct sysinfo memInfo;

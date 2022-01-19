@@ -200,6 +200,13 @@ public:
         return stateFluentHashKeys[index];
     }
 
+    bool operator ==(State const& other) const {
+        if (hashKey >= 0 && other.hashKey >= 0) {
+            return hashKey == other.hashKey;
+        }
+        assert(false);
+    }
+
     struct CompareIgnoringStepsToGo {
         bool operator()(State const& lhs, State const& rhs) const {
             if ((lhs.hashKey >= 0) && (rhs.hashKey >= 0)) {
@@ -336,7 +343,7 @@ public:
     static std::vector<std::vector<std::pair<int, long>>>
         stateFluentHashKeysOfProbabilisticStateFluents;
 
-private:
+//private:
     std::vector<double> deterministicStateFluents;
     std::vector<double> probabilisticStateFluents;
 

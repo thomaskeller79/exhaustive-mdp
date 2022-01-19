@@ -48,7 +48,6 @@ string PDState::toCompactString() const {
     return ss.str();
 }
 
-
 string KleeneState::toString() const {
     stringstream ss;
     for (unsigned int index = 0; index < KleeneState::stateSize; ++index) {
