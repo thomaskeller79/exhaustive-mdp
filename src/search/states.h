@@ -204,7 +204,21 @@ public:
         if (hashKey >= 0 && other.hashKey >= 0) {
             return hashKey == other.hashKey;
         }
-        assert(false);
+
+        for (size_t i = 0; i < numberOfDeterministicStateFluents; ++i) {
+            if (deterministicStateFluents[i] !=
+                other.deterministicStateFluents[i]) {
+                return false;
+            }
+        }
+
+        for (size_t i = 0; i < numberOfProbabilisticStateFluents; ++i) {
+            if (probabilisticStateFluents[i] != other.probabilisticStateFluents[i]) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     struct CompareIgnoringStepsToGo {
