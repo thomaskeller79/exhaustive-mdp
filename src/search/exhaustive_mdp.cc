@@ -59,7 +59,7 @@ void ExhaustiveMDPGenerator::initSession() {
     states.push_back(SearchEngine::initialState);
     int stateID = 0;
     while(stateID < states.size()) {
-        cout << "expanding state with index " << stateID << endl;
+        // cout << "expanding state with index " << stateID << endl;
         expandState(stateID);
         ++stateID;
     }
