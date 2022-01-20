@@ -19,49 +19,48 @@ bool ExhaustiveMDPGenerator::setValueFromString(string& param, string& value) {
 }
 
 int ExhaustiveMDPGenerator::getStateID(State const& state) {
-    for (int i = 0; i < states.size(); ++i) {
-        if (states[i] == state) {
-            return i;
-        }
+    if (states.count(state)) {
+        return states[state];
     }
-    if (states.size() == maxStates) {
+    int result = states.size();
+    if (result == maxStates) {
         cout << "Error: State limit reached! Aborting." << endl;
         exit(1);
     }
-    int result = states.size();
-    states.push_back(state);
+    open.push_back(state);
+    states[state] = result;
     return result;
 }
 
 void ExhaustiveMDPGenerator::expandPDState(
-    PDState const& state, double prob, int index, vector<int> &succStateIDs, vector<double> &probs) {
+    PDState state, double prob, int index, vector<int> &succStateIDs, vector<double> &probs) {
     while (index < State::numberOfProbabilisticStateFluents &&
            state.probabilisticStateFluentAsPD(index).isDeterministic()) {
+       state.probabilisticStateFluent(index) = state.probabilisticStateFluentAsPD(index).values[0];
         ++index;
     }
     if (index == State::numberOfProbabilisticStateFluents) {
-        State succ(state);
-        State::calcStateHashKey(succ);
-        State::calcStateFluentHashKeys(succ);
-        succStateIDs.push_back(getStateID(succ));
+        State::calcStateHashKey(state);
+        State::calcStateFluentHashKeys(state);
+        succStateIDs.push_back(getStateID(state));
         probs.push_back(prob);
     } else {
         const DiscretePD &varVal = state.probabilisticStateFluentAsPD(index);
         for (size_t i = 0; i < varVal.values.size(); ++i) {
-            PDState copy(state);
-            copy.probabilisticStateFluent(index) = varVal.values[i];
-            expandPDState(copy, prob*varVal.probabilities[i], index + 1, succStateIDs, probs);
+            state.probabilisticStateFluent(index) = varVal.values[i];
+            expandPDState(state, prob*varVal.probabilities[i], index + 1, succStateIDs, probs);
         }
     }
 }
 
 void ExhaustiveMDPGenerator::initSession() {
-    states.push_back(SearchEngine::initialState);
-    int stateID = 0;
-    while(stateID < states.size()) {
-        // cout << "expanding state with index " << stateID << endl;
-        expandState(stateID);
-        ++stateID;
+    applicableActionCounter = vector<int>(SearchEngine::actionStates.size(), 0);
+
+    getStateID(SearchEngine::initialState);
+    while(!open.empty()) {
+        State state = open.back();
+        open.pop_back();
+        expandState(state);
     }
 
     stringstream ss;
@@ -75,20 +74,30 @@ void ExhaustiveMDPGenerator::initSession() {
     }
     SystemUtils::writeFile(fileName, ss.str());
 
+    cout << "Actions that are never applicable: " << endl;
+    for (int i = 0; i < applicableActionCounter.size(); ++i) {
+        if (applicableActionCounter[i] == 0) {
+            cout << SearchEngine::actionStates[i].toCompactString() << endl;
+        }
+    }
+
     exit(1);
 }
 
-void ExhaustiveMDPGenerator::expandState(int const stateID) {
-    vector<int> actionsToExpand = getApplicableActions(states[stateID]);
+void ExhaustiveMDPGenerator::expandState(State const& state) {
+    assert(states.count(state));
+    int stateID = states[state];
+    vector<int> actionsToExpand = getApplicableActions(state);
     for (int actionID = 0; actionID < actionsToExpand.size(); ++actionID) {
         if (actionsToExpand[actionID] == actionID) {
+            ++applicableActionCounter[actionID];
             // cout << "action " << actionStates[actionID].toCompactString() << " (" << actionID << ")" << endl;
             PDState next(SearchEngine::horizon);
-            // cout << states[stateID].hashKey << endl;
-            calcSuccessorState(states[stateID], actionID, next);
+            // cout << state.hashKey << endl;
+            calcSuccessorState(state, actionID, next);
             // cout << "successor computed!" << endl;
             double reward = 0.0;
-            calcReward(states[stateID], actionID, reward);
+            calcReward(state, actionID, reward);
             // cout << "reward: " << reward << endl;
             vector<int> succStateIDs;
             vector<double> probs;
@@ -97,13 +106,14 @@ void ExhaustiveMDPGenerator::expandState(int const stateID) {
             // cout << "total num states: " << states.size() << endl;
             transitions.emplace_back(stateID, actionID, move(succStateIDs), move(probs), reward);
         } else if (actionsToExpand[actionID] >= 0) {
+            ++applicableActionCounter[actionID];
             // TODO: Just copy this transition!
             PDState next(SearchEngine::horizon);
-            // cout << states[stateID].hashKey << endl;
-            calcSuccessorState(states[stateID], actionID, next);
+            // cout << state.hashKey << endl;
+            calcSuccessorState(state, actionID, next);
             // cout << "successor computed!" << endl;
             double reward = 0.0;
-            calcReward(states[stateID], actionID, reward);
+            calcReward(state, actionID, reward);
             // cout << "reward: " << reward << endl;
             vector<int> succStateIDs;
             vector<double> probs;

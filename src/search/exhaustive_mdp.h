@@ -24,7 +24,7 @@ class ExhaustiveMDPGenerator : public ProbabilisticSearchEngine {
 public:
     ExhaustiveMDPGenerator() :
         ProbabilisticSearchEngine("ExhaustiveMDPGenerator"),
-        maxStates(1000000), fileName("states_" + SearchEngine::taskName) {}
+        maxStates(100000), fileName("states_" + SearchEngine::taskName) {}
 
     bool setValueFromString(std::string& param, std::string& value) override;
 
@@ -49,9 +49,9 @@ public:
     void printStepStatistics(std::string /*indent*/) const override {}
 
 private:
-    void expandState(int const stateID);
+    void expandState(State const& state);
     void expandPDState(
-        PDState const& state, double prob, int index,
+        PDState state, double prob, int index,
         std::vector<int> &succStateIDs, std::vector<double> &probs);
     int getStateID(State const& state);
 
@@ -63,8 +63,10 @@ private:
         fileName = _fileName;
     }
 
-    std::vector<State> states;
+    std::unordered_map<State, int, State::HashWithoutRemSteps> states;
+    std::vector<State> open;
     std::vector<Transition> transitions;
+    std::vector<int> applicableActionCounter;
 
     int maxStates;
     std::string fileName;
