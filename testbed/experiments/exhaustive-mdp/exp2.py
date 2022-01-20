@@ -18,7 +18,7 @@ def is_running_on_cluster():
 
 PARTITION = "infai_2"
 EMAIL = "tho.keller@unibas.ch"
-REV = "90cd0b7e"
+REV = "dadc03bc"
 
 TIME_PER_STEP = 1.0
 if is_running_on_cluster():
